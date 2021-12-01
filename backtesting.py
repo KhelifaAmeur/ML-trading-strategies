@@ -1,5 +1,25 @@
 ## Backtester
-
+'''
+class Strategy:
+    
+    def __init__(self, ):
+        self.fees = 0.001
+        self.tokens = [0]
+        self.cash = [500]
+        self.wallet = [500]
+        
+        self.positions = [0]
+        self.long_times = []
+        self.short_times = []
+        self.exit_times = []
+        self.
+        self.
+        self.
+'''   
+########################################################
+        
+        
+        
 def strat(signals, close, verbose=False):
     fees = 0.001
     tokens = [0]
@@ -16,123 +36,132 @@ def strat(signals, close, verbose=False):
 
     current_position = {
         "side": None,
-        #"qty": 1,
-        #"take_profit": 0.5,
-        #"stop_loss": -0.2,
         "entry_price": None,
         "exit_price": None,
         "entry_time": None,
         "exit_time": None,
-        #"exit_reason": ""
     }
     trades = []
 
-    def enter_long(i):
-        tokens.append(cash[i]*(1-fees)/close[i])
+
+    def take_position(i, side, double_order):
+        if verbose:
+            print('enter ' + dic_positions[side])
+        
+        if double_order:
+            tokens.append((1-2*fees)*tokens[i])
+        if not double_order:
+            tokens.append(cash[i]*(1-fees)/close[i])
+            
         cash.append(0)
-        positions.append(1)
-        long_times.append(signals.index[i])
-        longs.append(close[i])
+        positions.append(side)
+        
+        if side == 1:
+            long_times.append(signals.index[i])
+            longs.append(close[i])
+        elif side == -1:  
+            short_times.append(signals.index[i])
+            shorts.append(close[i])
+            
         # current_postion = Position()
-        current_position['side'] = 1
+        current_position['side'] = side
         current_position['entry_price'] = close[i]
-        current_position['entry_time'] = signals.index[i]
-
-    def enter_short(i):
-        tokens.append(cash[i]*(1-fees)/close[i])
-        cash.append(0)
-        positions.append(-1)
-        short_times.append(signals.index[i])
-        shorts.append(close[i])
-        current_position['side'] = -1
-        current_position['entry_price'] = close[i]
-        current_position['entry_time'] = signals.index[i]
-
-    def neutral(i):
+        current_position['entry_time'] = signals.index[i]  
+        
+    def neutral(i, side, position):
+        if verbose:
+            if position == 1 and side == 1:
+                print('remain long')
+            elif position == -1 and side == -1:
+                print('remain short')
+            else:
+                print("stay neutral")
+            
         tokens.append(tokens[i])
         cash.append(cash[i])
-        positions.append(0)
+        positions.append(positions[i])
+        
 
-    def exit(i, why, side, ROI):
-        tokens.append(0)
-        positions.append(0)
+    def sell(i, position, double_order):
+            
         exit_times.append(signals.index[i])
         exits.append(close[i])
+        
+        ROI = position *(close[i] - current_position["entry_price"])/current_position["entry_price"]
+        
+        if not double_order:
+            tokens.append(0)
+            cash.append((1-fees) * tokens[i] * current_position["entry_price"] * (1 + ROI))   
+            positions.append(0)
+        
+        current_position['exit_price'] = close[i]
+        current_position["exit_time"] = signals.index[i]
+        trades.append(current_position.copy())
+        
+        if verbose:
+            print("exit " + dic_positions[position] + " position")
+            print("ROI", ROI)
+        
 
-        if side == 1:
-            cash.append((1-fees) * tokens[i] * current_position["entry_price"] * (1+ROI/100) )
-            current_position['exit_price'] = close[i]
-            current_position["exit_time"] = signals.index[i]
-            current_position["exit_reason"] = why
-            trades.append(current_position.copy())
+           
 
-        if side == -1:
-            cash.append((1-fees) * tokens[i] * current_position["entry_price"] * (1+ROI/100) )
-            current_position['exit_price'] = close[i]
-            current_position["exit_time"] = signals.index[i]
-            current_position["exit_reason"] = why
-            trades.append(current_position.copy())
-
-    def monitor_exit(i):
-        if positions[i] == 1:
-            ROI = (close[i] - current_position["entry_price"])*100/current_position["entry_price"]
-            if verbose:
-                print("ROI", ROI)
-            if ROI > 0.5:
-                exit(i, "take_profit", 1, ROI)
-            elif ROI < -0.2:
-                exit(i, "stop_loss", 1, ROI)
-            else:
-                tokens.append(tokens[i])
-                cash.append(cash[i])
-                positions.append(1)
-
-        if positions[i] == -1:
-            ROI = -(close[i] - current_position["entry_price"])*100/current_position["entry_price"]
-            if verbose:
-                print("ROI", ROI)
-            if ROI > 0.5:
-                exit(i, "take_profit", -1, ROI)
-            elif ROI < -0.2:
-                exit(i, "stop_loss", -1, ROI)
-            else:
-                tokens.append(tokens[i])
-                cash.append(cash[i])
-                positions.append(-1)
+    dic_positions = {1:'long', -1:'short'}
 
     for i, s in enumerate(signals):
-        print(i)
-        if positions[i] == 0:
+        p = positions[i]
+        
+        if p == 0:
             if verbose:
-                print("\nnot in position, " + str(i))
-            # long signal, enter long
-            if s == 1:
-                if verbose:
-                    print("enter long")
-                enter_long(i)
-
-            # short signal, enter short
-            if s == -1:
-                if verbose:
-                    print("enter short")
-                enter_short(i)
+                print("\n(" + str(i) + ") not in position ")
+            
+            # take position
+            if s != 0:
+                take_position(i, s, False)
 
             # stay neutral
-            if s == 0:
-                if verbose:
-                    print("stay neutral")
-                neutral(i)
-
-        if positions[i] != 0 :
+            elif s == 0:
+                neutral(i, s, p)
+                
+        elif p == 1:
             if verbose:
-                print("\nin position, " + str(i))
-                print(current_position)
-            # monitor return
-            monitor_exit(i)
+                print("\n(" + str(i) + ") in position long ")
+                
+            if s == 1:
+                neutral(i, s, p)
+            
+            elif s == 0:
+                sell(i, p, False)
+
+            elif s == -1:
+                sell(i, p, True)
+                take_position(i, s, True)
+        
+        elif p == -1:
+            if verbose:
+                print("\n(" + str(i) + ") in position short ")
+                
+            if s == -1:
+                neutral(i, s, p)
+            
+            elif s == 0:
+                sell(i, p, False)
+
+            elif s == 1:
+                sell(i, p, True)
+                take_position(i, s, True)
+                
+        if p == 0:
+            wallet.append(wallet[i])
+        else:
+            ROI = p *(close[i] - current_position["entry_price"])/current_position["entry_price"]
+            wallet.append(wallet[i]*(1+ROI))
+
+            
+               
 
         if verbose:
             print("close", close[i])
             print("cash", cash[i])
             print("tokens", tokens[i])
 
-    return tokens, cash, positions, long_times, short_times, exit_times, longs, shorts, exits, trades
+    return tokens, cash, positions, long_times, short_times, exit_times, longs, shorts, exits, trades, wallet
