@@ -25,9 +25,10 @@ def add_signal(data, alpha):
 
 
 def add_technical_indicators(data, lookback_period=30):
+    # Momentum, Volatility, Trend
     AOI = AwesomeOscillatorIndicator(high=data.high, low=data.low,
                                      window1=5, window2=lookback_period)
-    VWAP = VolumeWeightedAveragePrice(high=data.high, low=data.low, close=data.Close, volume=data.Volume,
+    VWAP = VolumeWeightedAveragePrice(high=data.high, low=data.low, close=data.close, volume=data.Volume,
                                       window=lookback_period)
     RSI = RSIIndicator(close=data.close, window=lookback_period)
     BB = BollingerBands(close=data.close, window=lookback_period, window_dev=2)
@@ -45,4 +46,10 @@ def add_technical_indicators(data, lookback_period=30):
     data['CCI'] = CCI.cci()
     data['MACD'] = MACD.macd()['MOM'] = AOI.awesome_oscillator()
 
+    return data
+
+def add_wlt(data):
+    return data
+
+def add_deep_features(data, ):
     return data

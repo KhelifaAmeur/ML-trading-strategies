@@ -39,17 +39,12 @@ def scale_data(train_data, test_data):
     return train_data, test_data
 
 
-def array_to_df(arr, columns):
-    df = pd.DataFrame(arr, columns=columns)
-    return df
-
-
 def prepare_data_for_training(data, lookback_period=10):
     X = []
     for i in range(lookback_period, data.shape[0]):
         X.append(data.loc[i - lookback_period:i - 1].values)
     
-    R = train_data.loc[lookback_period:, 'Return'].values
-    S = train_data.loc[lookback_period:, 'Signal'].values
+    R = data.loc[lookback_period:, 'Return'].values
+    S = data.loc[lookback_period:, 'Signal'].values
     
     return np.array(X), S, R

@@ -26,12 +26,13 @@ Metrics de prediction
     - FPR:
     - F1_score:
 
-Input: (y_tye, y_pred, w_true=optional) | vector of {-1, 0, 1}
+Input: (y_true, y_pred, w_true=optional) | vector of {-1, 0, 1}
 Output: (float) 
 '''
 
 
 def get_TPR_FPR(y_true, y_pred):
+    # Change for multiple classification
     cm = confusion_matrix(y_true, y_pred)
     TN, FP, FN, TP = cm.ravel()
     TPR = TP/(TP+FN)
@@ -49,9 +50,9 @@ def get_F1(y_true, y_pred):
     return f1
 
 
-def get_WACC(y_true, y_pred, w_pred):
-    weights = abs(w_pred).sum()
-    wacc = abs(r_test)[y_true == y_pred].sum()
+def get_WACC(y_true, y_pred, w_true):
+    weights = abs(w_true).sum()
+    wacc = abs(w_true)[y_true == y_pred].sum()
     return wacc/weights
 
 
