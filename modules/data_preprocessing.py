@@ -9,7 +9,7 @@ Created on Tue Nov 30 18:36:52 2021
 import numpy as np
 import pandas as pd
 from sklearn.preprocessing import MinMaxScaler
-
+from imblearn.under_sampling import RandomUnderSampler
 
 def treat_date(date):
     if 'AM' in date or 'PM' in date:
@@ -60,7 +60,7 @@ def prepare_data_for_training(data, lookback_period=10, signal=False):
 
 
 def flat(arr):
-'''Returns an array with a feature corresponding to each day and each indicator'''
+    '''Returns an array with a feature corresponding to each day and each indicator'''
     res = []
     for item in arr:
         features = []
@@ -69,9 +69,13 @@ def flat(arr):
         res.append(features)
     return res
 
+def UnderSampler(data, label = 'Signal'):
+    labels = data.label.unique()
+    samples = {lab: data[data[label] == lab] for lab in labels}
+    return
 
-def prepare_data_2D_format(data, lookback_period = 10, signal=True):
-''' Returns a single dataset ready to be used for logit, CART and Random Forest'''
+def prepare_data_2D_format(data, lookback_period = 10, signal=True, undersample = True):
+    ''' Returns a single dataset ready to be used for logit, CART and Random Forest'''
     # reformatting the data
     X_train, y_train, return_train = prepare_data_for_training(data, lookback_period, signal)
     
@@ -88,7 +92,7 @@ def prepare_data_2D_format(data, lookback_period = 10, signal=True):
     ## Some indicators have a larger lookback period than other. 
     ## We remove the beginning of the dataset to make everything homogeneous
 
-    while len(X_train[0]) != lookback_period*len(data.columns):
+    while len(X_train[0]) != lookback_period*(len(data.columns)-2):
         X_train = X_train[1:]
         y_train = y_train[1:]
 
@@ -96,14 +100,19 @@ def prepare_data_2D_format(data, lookback_period = 10, signal=True):
     ## Generating a columns name
     features = []
     for k in range(lookback_period):
-        features = features + [col+"_day_minus"+str(10-k) for col in data.columns]
+        features = features + [col+"_day_minus"+str(10-k) for col in data.columns if col not in ['Signal', 'Return']]
         
     train = pd.DataFrame(X_train)
     train.columns = features
     train['Signal'] = pd.Series(y_train)
     
+    if undersample: 
+        X = train
+        X = X.drop(['Signal'], axis = 1)
+        y = train['Signal']
+        rus = RandomUnderSampler(random_state=42)
+        X_res, y_res = rus.fit_resample(X, y)
+        train = X_res
+        train['Signal'] = y_res
+    
     return train 
-
-def undersampling(data):
-'''Returns balanced dataset using undersampling'''
-    return
