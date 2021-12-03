@@ -48,6 +48,6 @@ def prepare_data_for_training(data, lookback_period=10):
     df = data.copy().drop(['Return', 'Signal'], axis=1)
     X = []
     for i in range(lookback_period, data.shape[0]):
-        X.append(data.loc[i - lookback_period:i - 1].values)
+        X.append(df.loc[i - lookback_period:i - 1].values)
 
     return np.array(X), S, R
