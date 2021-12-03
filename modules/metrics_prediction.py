@@ -38,7 +38,7 @@ def get_confusion_matrix(y_true, y_pred):
     return cm
 
 def get_TPR_FPR(y_true, y_pred):
-    TPRs = recall_score(y_true, y_pred, average=None)
+    TPRs = recall_score(y_true, y_pred, average='macro')
     #FPRs = ...
     return TPRs, #FPRs
 
@@ -49,11 +49,13 @@ def get_ACC(y_true, y_pred):
 
 
 def get_F1(y_true, y_pred):
-    f1 = f1_score(y_true, y_pred)
+    f1 = f1_score(y_true, y_pred, average='macro')
     return f1
 
 
 def get_WACC(y_true, y_pred, w_true):
+    # y_true and y_test must be Series
+
     weights = abs(w_true).sum()
     wacc = abs(w_true)[y_true == y_pred].sum()
     return wacc/weights
