@@ -70,7 +70,6 @@ def flat(arr):
     return res
 
 
-
 def prepare_data_2D_format(data, lookback_period = 10, signal=True):
 ''' Returns a single dataset ready to be used for logit, CART and Random Forest'''
     # reformatting the data
