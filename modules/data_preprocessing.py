@@ -40,11 +40,14 @@ def scale_data(train_data, test_data):
 
 
 def prepare_data_for_training(data, lookback_period=10):
+    # take return and signal
+    R = data.loc[lookback_period:, 'Return'].values
+    S = data.loc[lookback_period:, 'Signal'].values
+
+    # build the dataset for neural networks type models
+    df = data.copy().drop(['Return', 'Signal'], axis=1)
     X = []
     for i in range(lookback_period, data.shape[0]):
         X.append(data.loc[i - lookback_period:i - 1].values)
-    
-    R = data.loc[lookback_period:, 'Return'].values
-    S = data.loc[lookback_period:, 'Signal'].values
-    
+
     return np.array(X), S, R
