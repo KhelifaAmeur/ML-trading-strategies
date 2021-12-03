@@ -57,3 +57,54 @@ def prepare_data_for_training(data, lookback_period=10, signal=False):
         X.append(df.loc[i - lookback_period:i - 1].values)
 
     return np.array(X), S, R
+
+
+def flat(arr):
+'''Returns an array with a feature corresponding to each day and each indicator'''
+    res = []
+    for item in arr:
+        features = []
+        for day in item:
+            features += day.tolist()
+        res.append(features)
+    return res
+
+
+
+def prepare_data_2D_format(data, lookback_period = 10, signal=True):
+''' Returns a single dataset ready to be used for logit, CART and Random Forest'''
+    # reformatting the data
+    X_train, y_train, return_train = prepare_data_for_training(data, lookback_period, signal)
+    
+    # removing the lookback_period from the beginning
+    y_train = y_train[lookback_period:]
+    
+    ## Remove empty lists in the beginning
+    while len(X_train[0]) == 0:
+        X_train = X_train[1:]
+        y_train = y_train[1:]
+    
+    X_train = flat(X_train)
+    
+    ## Some indicators have a larger lookback period than other. 
+    ## We remove the beginning of the dataset to make everything homogeneous
+
+    while len(X_train[0]) != lookback_period*len(data.columns):
+        X_train = X_train[1:]
+        y_train = y_train[1:]
+
+    
+    ## Generating a columns name
+    features = []
+    for k in range(lookback_period):
+        features = features + [col+"_day_minus"+str(10-k) for col in data.columns]
+        
+    train = pd.DataFrame(X_train)
+    train.columns = features
+    train['Signal'] = pd.Series(y_train)
+    
+    return train 
+
+def undersampling(data):
+'''Returns balanced dataset using undersampling'''
+    return
