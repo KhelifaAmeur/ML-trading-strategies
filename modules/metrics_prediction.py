@@ -10,6 +10,8 @@ import pandas as pd
 
 from sklearn.metrics import confusion_matrix
 from sklearn.metrics import accuracy_score
+from sklearn.metrics import precision_score
+from sklearn.metrics import recall_score
 from sklearn.metrics import f1_score
 
 from sklearn.metrics import mean_squared_error
@@ -27,17 +29,18 @@ Metrics de prediction
     - F1_score:
 
 Input: (y_true, y_pred, w_true=optional) | vector of {-1, 0, 1}
-Output: (float) 
+Output: (float)
 '''
 
 
-def get_TPR_FPR(y_true, y_pred):
-    # Change for multiple classification
+def get_confusion_matrix(y_true, y_pred):
     cm = confusion_matrix(y_true, y_pred)
-    TN, FP, FN, TP = cm.ravel()
-    TPR = TP/(TP+FN)
-    FPR = FP/(TN+FP)
-    return TPR, FPR
+    return cm
+
+def get_TPR_FPR(y_true, y_pred):
+    TPRs = recall_score(y_true, y_pred, average=None)
+    #FPRs = ...
+    return TPRs, #FPRs
 
 
 def get_ACC(y_true, y_pred):
@@ -64,7 +67,7 @@ Metrics de prediction
     - MSE:
     - MAE:
     - OSR2:
-    
+
 Input: (y_true, y_pred) | vector of float
 Output: (float)
 '''
@@ -80,9 +83,9 @@ def get_MAE(y_true, y_pred):
     return mae
 
 
-def get_OSR2(y_true, y_pred, y_true_train):   
+def get_OSR2(y_true, y_pred, y_true_train):
     sse = np.sum((y_true - y_pred)**2)
-    sst = np.sum((y_true - np.mean(y_true_train))**2)    
+    sst = np.sum((y_true - np.mean(y_true_train))**2)
     osr2 = 1 - sse/sst
     return osr2
 
