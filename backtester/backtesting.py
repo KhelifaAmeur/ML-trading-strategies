@@ -195,39 +195,34 @@ class MeanRevertStrategy:
 
         self.dic_positions = {1:'long', -1:'short'}
     
-    def run(self, signals, close, verbose=False):
+    def run(self, signals, close, verbose=True):
         self.verbose = verbose
         self.signals = signals
         self.close  = close
+        verbose_dict = {0: ") not in position ", 1: ") in position long ", -1: ") in position short "}
+        count = 0
         
         for i, s in enumerate(self.signals):
             p = self.positions[i]
             
-            if p == 0:
-                if self.verbose:
-                    print("\n(" + str(i) + ") not in position ")
-                if s != 0:
-                    self.take_position(i, -s, False)
-                elif s == 0:
-                    self.neutral(i, s, p)
-                    
-            elif p == 1:
-                if self.verbose:
-                    print("\n(" + str(i) + ") in position long ")
-                if s == 1:
-                    self.take_position(i, s, True)
-                    self.sell_position(i, p, False)
-                else: 
-                    self.neutral(i, s, p)
+            if self.verbose: print("\n(" + str(i) + verbose_dict[p] + str(p))
+                
+            if p == s == 0:
+                self.neutral(i, p)
+                
+            if p == 0 and s != 0:
+                self.take_position(i, -s, False)
+                count = 1
             
-            elif p == -1:
-                if self.verbose:
-                    print("\n(" + str(i) + ") in position short ")
-                if s == -1:
-                    self.take_position(i, s, True)
-                    self.sell_position(i, p, False)
-                else:
-                    self.neutral(i, s, p)
+            if p != 0 and (p == -s or s == 0) and count < 4: # 1&-1, -1&1, 1&0, -1&0
+                self.neutral(i, p)
+                count += 1
+
+            if p != 0 and (p == -s or s == 0) and count >= 4:
+                self.sell_position(i, p, False)
+                self.take_position(i, -s, False)
+                count = 1
+            
             
             self.wallet.append(self.cash[i]+self.tokens[i]*self.close[i])
             
@@ -243,8 +238,10 @@ class MeanRevertStrategy:
         
         if double_order:
             self.tokens.append((1-2*self.fees)*self.tokens[i])
+            
         if not double_order:
             self.tokens.append(self.cash[i]*(1-self.fees)/self.close[i])
+            
         self.cash.append(0)
         self.positions.append(side)
             
@@ -253,15 +250,11 @@ class MeanRevertStrategy:
         
 
         
-    def neutral(self, i, side, position):
-        if self.verbose:
-            if position == 1 and side == 1:
-                print('remain long')
-            elif position == -1 and side == -1:
-                print('remain short')
-            else:
-                print("stay neutral")
-            
+    def neutral(self, i, position):
+        verbose_dict = {1: 'remain long', -1: 'remain short', 0: "stay neutral"}
+        
+        if self.verbose: print(verbose_dict[position])
+
         self.tokens.append(self.tokens[i])
         self.cash.append(self.cash[i])
         self.positions.append(self.positions[i])
@@ -322,6 +315,10 @@ class MeanRevertStrategy:
         
         plt.tight_layout()
         plt.show()
+        
+        
+        
+
 
 ########################################################
         
