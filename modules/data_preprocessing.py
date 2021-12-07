@@ -100,7 +100,7 @@ def prepare_data_2D_format(data, lookback_period = 10, signal=True, undersample 
     ## Generating a columns name
     features = []
     for k in range(lookback_period):
-        features = features + [col+"_day_minus"+str(10-k) for col in data.columns if col not in ['Signal', 'Return']]
+        features = features + [col+"_day_minus"+str(lookback_period-k) for col in data.columns if col not in ['Signal', 'Return']]
         
     train = pd.DataFrame(X_train)
     train.columns = features
